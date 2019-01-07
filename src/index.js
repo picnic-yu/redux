@@ -27,17 +27,8 @@ const UPDATE_CONTENT_TEXT = 'UPDATE_CONTENT_TEXT'
 /**
  * 创建一个仓库
  */
-function createStore(){
-    let state = {
-        title: {
-            color: 'red',
-            text: '标题1'
-        },
-        content: {
-            color: 'green',
-            text: '标题2'
-        }
-    }
+function createStore(reducer) {
+    let state ;
     function getState(){
         // 深拷贝
         return JSON.parse(JSON.stringify(state))
@@ -48,29 +39,70 @@ function createStore(){
      */
     // 接收一个action动作 描述你想干啥
     function dispatch(action) {
-        switch (action.type) {
-            case 'UPDATE_TITLE_COLOR':
-                state.title.color = action.color;
-                break;
-            case 'UPDATE_TITLE_TEXT':
-                state.title.text = action.text;
-                break;
-            case 'UPDATE_CONTENT_COLOR':
-                state.content.color = action.color;
-                break;
-            case 'UPDATE_CONTENT_TEXT':
-                state.content.text = action.text;
-                break;
-            default:
-                break;
-        }
+        state = reducer(state,action);
     }
+    // 传入空对象是为了实现state初始化
+    dispatch({})
     return{
         getState,
         dispatch
     }
 } 
-let store = createStore();
+let initState = {
+    title: {
+        color: 'red',
+        text: '标题1'
+    },
+    content: {
+        color: 'green',
+        text: '标题2'
+    }
+}
+// 处理器，根据老的状态和拿到的动作，返回心得zhuang'ta
+let reducer = function (state = initState, action) {
+    switch (action.type) {
+        case 'UPDATE_TITLE_COLOR':
+            return {
+                ...state,
+                title:{
+                    ...state.title,
+                    color:action.color
+                }
+            }
+            break;
+        case 'UPDATE_TITLE_TEXT':
+            return {
+                ...state,
+                title: {
+                    ...state.title,
+                    text: action.text
+                }
+            }
+            break;
+        case 'UPDATE_CONTENT_COLOR':
+            return {
+                ...state,
+                content: {
+                    ...state.content,
+                    text: action.color
+                }
+            }
+            break;
+        case 'UPDATE_CONTENT_TEXT':
+            return {
+                ...state,
+                content: {
+                    ...state.content,
+                    text: action.text
+                }
+            }
+            break;
+        default:
+            return state;
+            break;
+    }
+}
+let store = createStore(reducer);
 renderApp(store.getState());
 setTimeout(()=>{
     store.dispatch({
