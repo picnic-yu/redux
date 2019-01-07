@@ -16,10 +16,7 @@ function renderContent(content){
     element.innerHTML = content.text;
     element.style.color = content.color;
 }
-function renderApp(state) {
-    renderTitle(state.title);
-    renderContent(state.content)
-}
+
 const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR'
 const UPDATE_TITLE_TEXT = 'UPDATE_TITLE_TEXT'
 const UPDATE_CONTENT_COLOR = 'UPDATE_CONTENT_COLOR'
@@ -29,6 +26,7 @@ const UPDATE_CONTENT_TEXT = 'UPDATE_CONTENT_TEXT'
  */
 function createStore(reducer) {
     let state ;
+    let listeners = []
     function getState(){
         // 深拷贝
         return JSON.parse(JSON.stringify(state))
@@ -40,12 +38,27 @@ function createStore(reducer) {
     // 接收一个action动作 描述你想干啥
     function dispatch(action) {
         state = reducer(state,action);
+        // 通知所有的监听函数执行
+        listeners.forEach((listener) => {
+            listener()
+        });
     }
     // 传入空对象是为了实现state初始化
     dispatch({})
+    // 订阅，供外界订阅仓库中状态的变化，如果变化了执行订阅的逻辑
+    function subscribe(listener){
+        // 订阅
+        listeners.push(listener);
+        // 返回取消订阅函数
+        // 过滤数组
+        return function (){
+            listeners = listeners.filter(item => item != listener);
+        }
+    }
     return{
         getState,
-        dispatch
+        dispatch,
+        subscribe
     }
 } 
 let initState = {
@@ -103,17 +116,23 @@ let reducer = function (state = initState, action) {
     }
 }
 let store = createStore(reducer);
-renderApp(store.getState());
+function render() {
+    renderTitle(store.getState().title);
+    renderContent(store.getState().content)
+}
+render();
+
+let unsubscribe =  store.subscribe(render)
 setTimeout(()=>{
     store.dispatch({
         type: UPDATE_TITLE_COLOR,
         color: 'skyblue'
     })
+    unsubscribe()
     store.dispatch({
         type: UPDATE_TITLE_TEXT,
         text: 'skyblue'
     })
-    renderApp(store.getState());
 },2000);
 
 
